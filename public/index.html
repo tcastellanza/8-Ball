@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <!-- Ensures the app fills the screen and handles the notch correctly -->
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+    
+    <!-- Makes the app launch in standalone mode (no URL bar/toolbars) -->
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    
+    <!-- Sets the status bar style (black-translucent is standard for modern apps) -->
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    
+    <!-- The name shown under the icon on the Home Screen -->
+    <meta name="apple-mobile-web-app-title" content="8-Ball Fortune">
+
+    <title>8-Ball Fortune</title>
+    <style>
+        :root {
+            --bg-color: #121212;
+            --ball-color: #222;
+            --white: #ffffff;
+            --text-color: #ffffff;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            overflow: hidden;
+            color: var(--text-color);
+        }
+
+        .container {
+            text-align: center;
+            padding: 20px;
+            width: 100%;
+            max-width: 400px;
+        }
+
+        h1 {
+            font-weight: 300;
+            margin-bottom: 50px;
+            letter-spacing: 1px;
+            opacity: 0.8;
+        }
+
+        .ball-container {
+            position: relative;
+            width: 300px;
+            height: 300px;
+            margin: 0 auto;
+        }
+
+        .ball {
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(circle at 30% 30%, #444, #000);
+            border-radius: 50%;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.6), inset -10px -10px 30px rgba(0,0,0,0.8);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+            transition: transform 0.1s ease-out;
+        }
+
+        .ball::before {
+            content: '';
+            position: absolute;
+            top: 15%;
+            left: 15%;
+            width: 30%;
+            height: 30%;
+            background: var(--white);
+            border-radius: 50%;
+            box-shadow: inset 2px 2px 5px rgba(0,0,0,0.2);
+        }
+
+        .eye {
+            width: 180px;
+            height: 180px;
+            border-radius: 50%;
+            background: #111;
+            border: 2px solid rgba(255,255,255,0.1);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            text-align: center;
+            font-weight: bold;
+            font-size: 1.2rem;
+            word-break: break-word;
+            transition: all 0.3s ease;
+        }
+
+        .shake-animation {
+            animation: shake 0.5s cubic-bezier(.36,.07,.19,.97) both;
+        }
+
+        @keyframes shake {
+            10%, 90% { transform: translate3d(-1px, 0, 0); }
+            20%, 80% { transform: translate3d(2px, 0, 0); }
+            30%, 50%, 70% { transform: translate3d(-4px, 0, 0); }
+            40%, 60% { transform: translate3d(4px, 0, 0); }
+        }
+
+        .instructions {
+            margin-top: 60px;
+            font-size: 0.9rem;
+            opacity: 0.5;
+        }
+
+        button {
+            margin-top: 20px;
+            padding: 12px 24px;
+            border-radius: 25px;
+            border: none;
+            background: var(--white);
+            color: #000;
+            font-weight: bold;
+            font-size: 1rem;
+            cursor: pointer;
+        }
+
+        .hidden {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h1 id="title">8-Ball Fortune</h1>
+        
+        <div class="ball-container">
+            <div id="ball" class="ball">
+                <div id="eye" class="eye">SHAKE ME</div>
+            </div>
+        </div>
+
+        <p class="instructions" id="instruction">Shake your phone to see your future</p>
+        <button id="startBtn">Enable Motion Sensor</button>
+    </div>
+
+    <script>
+        const ball = document.getElementById('ball');
+        const eye = document.getElementById('eye');
+        const instruction = document.getElementById('instruction');
+        const startBtn = document.getElementById('startBtn');
+        const title = document.getElementById('title');
+
+        const phrases = [
+            "It is certain",
+            "Outlook not so good",
+            "Very likely",
+            "Don't count on it",
+            "Ask again later",
+            "Signs point to yes",
+            "My sources say no",
+            "Better not tell you now",
+            "Most likely",
+            "Concentrate and try again",
+            "Yes, definitely",
+            "No way",
+            "Maybe tomorrow",
+            "You're on the right track",
+            "Not enough information",
+            "Time will tell",
+            "It's a secret",
+            "Absolutely not",
+            "Go for it!",
+            "Wait and see"
+        ];
+
+        let isShaking = false;
+        let lastShakeTime = 0;
+
+        function updatePhrase() {
+            const randomPhrase = phrases[Math.floor(Math.random() * phrases.length)];
+            eye.textContent = randomPhrase;
+            
+            // Visual feedback
+            ball.classList.remove('shake-animation');
+            void ball.offsetWidth; // Trigger reflow
+            ball.classList.add('shake-animation');
+
+            setTimeout(() => {
+                ball.classList.remove('shake-animation');
+            }, 500);
+        }
+
+        function handleMotion(event) {
+            if (isShaking) return;
+
+            const accX = event.accelerationIncludingGravity.x;
+            const accY = event.accelerationIncludingGravity.y;
+            const accZ = event.accelerationIncludingGravity.z;
+
+            // Detect significant movement (shake)
+            const magnitude = Math.sqrt(accX**2 + accY**2 + accZ**2);
+
+            if (magnitude > 25) { // Threshold for shaking
+                const currentTime = Date.now();
+                if (currentTime - lastShakeTime > 1000) { // Cooldown 1 second
+                    isShaking = true;
+                    updatePhrase();
+                    lastShakeTime = currentTime;
+                    
+                    setTimeout(() => {
+                        isShaking = false;
+                    }, 1000);
+                }
+            }
+        }
+
+        async function requestPermissions() {
+            if (typeof DeviceMotionEvent !== 'undefined' && typeof DeviceMotionEvent.requestPermission === 'function') {
+                // iOS 13+ requires permission
+                try {
+                    const permission = await DeviceMotionEvent.requestPermission();
+                    if (permission === 'granted') {
+                        window.addEventListener('devicemotion', handleMotion);
+                        startBtn.classList.add('hidden');
+                        instruction.textContent = "Shake your phone now";
+                    }
+                } catch (error) {
+                    console.error(error);
+                    alert("Permission denied or error occurred.");
+                }
+            } else {
+                // Non-iOS or older iOS
+                window.addEventListener('devicemotion', handleMotion);
+                startBtn.classList.add('hidden');
+                instruction.textContent = "Shake your phone now";
+            }
+        }
+
+        startBtn.addEventListener('click', requestPermissions);
+    </script>
+</body>
+</html>
