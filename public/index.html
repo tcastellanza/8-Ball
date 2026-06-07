@@ -245,29 +245,25 @@
         }
         //fades out, swaps text back, fades in
         function resetToInitial() {
-            eyeText.classList.remove('initial');
-            eyeText.style.transition = 'opacity 0.7s ease';
-            eyeText.style.opacity = '0';
+    void eyeText.offsetWidth;  // ← reflow BEFORE fade-out, forces browser to commit current opacity
+    eyeText.style.transition = 'opacity 0.7s ease';
+    eyeText.style.opacity = '0';
 
-            setTimeout(() => {
-                eyeText.style.transition = 'none';
-                eyeText.classList.remove('show-text');
-                eyeText.textContent = 'SHAKE ME';
-                eyeText.style.fontSize = '1.2rem';
-                
-                // Force reflow to apply changes immediately
-                void eyeText.offsetWidth;
-                
-                eyeText.style.transition = 'opacity 0.7s ease';
-                eyeText.style.opacity = '1';
-                eyeText.classList.add('initial');
-            }, 700);
-        }
+    setTimeout(() => {
+        eyeText.style.transition = 'none';
+        eyeText.style.opacity = '0';
+        eyeText.textContent = 'SHAKE ME';
+        eyeText.style.fontSize = '1.2rem';
+        void eyeText.offsetWidth;
+        eyeText.style.transition = 'opacity 0.7s ease';
+        eyeText.style.opacity = '1';
+    }, 800);  // ← 800 instead of 700, gives the 0.7s fade room to finish
+}
 
         //clears and restarts the 20s countdown
         function restartIdleTimer() {
             clearTimeout(idleTimer);
-            idleTimer = setTimeout(resetToInitial, 20000);
+            idleTimer = setTimeout(resetToInitial, 12000);
         }
 
         async function requestPermissions() {
