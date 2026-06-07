@@ -245,15 +245,22 @@
         }
         //fades out, swaps text back, fades in
         function resetToInitial() {
+            eyeText.classList.remove('initial');
             eyeText.style.transition = 'opacity 0.7s ease';
             eyeText.style.opacity = '0';
 
             setTimeout(() => {
+                eyeText.style.transition = 'none';
                 eyeText.classList.remove('show-text');
-                eyeText.classList.add('initial');
                 eyeText.textContent = 'SHAKE ME';
                 eyeText.style.fontSize = '1.2rem';
+                
+                // Force reflow to apply changes immediately
+                void eyeText.offsetWidth;
+                
+                eyeText.style.transition = 'opacity 0.7s ease';
                 eyeText.style.opacity = '1';
+                eyeText.classList.add('initial');
             }, 700);
         }
 
