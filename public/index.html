@@ -2,18 +2,10 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <!-- Ensures the app fills the screen and handles the notch correctly -->
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-    
-    <!-- Makes the app launch in standalone mode (no URL bar/toolbars) -->
     <meta name="apple-mobile-web-app-capable" content="yes">
-    
-    <!-- Sets the status bar style (black-translucent is standard for modern apps) -->
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    
-    <!-- The name shown under the icon on the Home Screen -->
     <meta name="apple-mobile-web-app-title" content="8-Ball Fortune">
-
     <title>8-Ball Fortune</title>
     <style>
         :root {
@@ -58,8 +50,8 @@
 
         .ball-container {
             position: relative;
-            width: 300px;
-            height: 300px;
+            width: min(85vw, 340px);
+            height: min(85vw, 340px);
             margin: 0 auto;
         }
 
@@ -73,24 +65,12 @@
             justify-content: center;
             align-items: center;
             position: relative;
-            transition: transform 0.1s ease-out;
-        }
-
-        .ball::before {
-            content: '';
-            position: absolute;
-            top: 15%;
-            left: 15%;
-            width: 30%;
-            height: 30%;
-            background: var(--white);
-            border-radius: 50%;
-            box-shadow: inset 2px 2px 5px rgba(0,0,0,0.2);
+            will-change: transform;
         }
 
         .eye {
-            width: 180px;
-            height: 180px;
+            width: 220px;
+            height: 220px;
             border-radius: 50%;
             background: #111;
             border: 2px solid rgba(255,255,255,0.1);
@@ -100,20 +80,37 @@
             padding: 20px;
             text-align: center;
             font-weight: bold;
-            font-size: 1.2rem;
             word-break: break-word;
-            transition: all 0.3s ease;
         }
 
-        .shake-animation {
-            animation: shake 0.5s cubic-bezier(.36,.07,.19,.97) both;
+        #eyeText {
+            font-size: 1.2rem;
+            opacity: 0;
+            transition: opacity 0.7s ease;
         }
 
-        @keyframes shake {
-            10%, 90% { transform: translate3d(-1px, 0, 0); }
-            20%, 80% { transform: translate3d(2px, 0, 0); }
-            30%, 50%, 70% { transform: translate3d(-4px, 0, 0); }
-            40%, 60% { transform: translate3d(4px, 0, 0); }
+        #eyeText.show-text {
+            opacity: 1;
+        }
+
+        #eyeText.initial {
+            opacity: 1;
+            font-size: 1.2rem;
+        }
+
+        @keyframes ballBounce {
+            0%   { transform: translateY(0) scale(1); }
+            18%  { transform: translateY(-30px) scale(1.03, 0.97); }
+            36%  { transform: translateY(0) scale(0.97, 1.04); }
+            52%  { transform: translateY(-15px) scale(1.02, 0.98); }
+            66%  { transform: translateY(0) scale(0.99, 1.02); }
+            78%  { transform: translateY(-6px) scale(1.01, 0.99); }
+            90%  { transform: translateY(0) scale(1); }
+            100% { transform: translateY(0) scale(1); }
+        }
+
+        .bouncing {
+            animation: ballBounce 0.9s cubic-bezier(0.25, 0.46, 0.45, 0.94) both;
         }
 
         .instructions {
@@ -146,7 +143,9 @@
         
         <div class="ball-container">
             <div id="ball" class="ball">
-                <div id="eye" class="eye">SHAKE ME</div>
+                <div id="eye" class="eye">
+                    <span id="eyeText" class="initial">SHAKE ME</span>
+                </div>
             </div>
         </div>
 
@@ -156,49 +155,68 @@
 
     <script>
         const ball = document.getElementById('ball');
-        const eye = document.getElementById('eye');
+        const eyeText = document.getElementById('eyeText');
         const instruction = document.getElementById('instruction');
         const startBtn = document.getElementById('startBtn');
-        const title = document.getElementById('title');
 
+        // Removed phrases that were too long to fit comfortably
         const phrases = [
-            "It is certain",
-            "Outlook not so good",
-            "Very likely",
-            "Don't count on it",
-            "Ask again later",
-            "Signs point to yes",
-            "My sources say no",
-            "Better not tell you now",
-            "Most likely",
-            "Concentrate and try again",
-            "Yes, definitely",
-            "No way",
-            "Maybe tomorrow",
-            "You're on the right track",
-            "Not enough information",
-            "Time will tell",
-            "It's a secret",
-            "Absolutely not",
-            "Go for it!",
-            "Wait and see"
+            "All signs point to yes, except the stop sign — that one's against you",
+            "Outlook good! (The 8-ball has no idea what it's talking about)",
+            "It is certain, and I am never wrong except for all the times I was",
+            "Ask again later… I'm eating",
+            "My sources say yes, but my sources are a horoscope from 2003",
+            "Cannot predict now — Mercury is in retrograde and so is my mood",
+            "Sure, but the 8-ball is just trying to be nice",
+            "Don't count on it, buddy",
+            "Outlook not so good — have you considered lowering your expectations?",
+            "Very doubtful. Like, very very doubtful.",
+            "Signs point to no, and the signs have been pretty accurate lately",
+            "Yes, but at what cost?",
+            "The answer is yes. Why do you keep asking?",
+            "I have been trapped in a plastic ball for 40 years. Please send help.",
+            "Definitely not, but hey, at least you asked",
+            "Absolutely not, but points for trying",
+            "Without a doubt! (This is not legal advice)",
+            "Yes! No. Maybe. Look, it's complicated.",
+            "Totally. The 8-ball is very confident in this one, which is concerning."
         ];
 
         let isShaking = false;
         let lastShakeTime = 0;
 
+        function getFontSize(text) {
+            const len = text.length;
+            if (len < 40)  return '1.2rem';
+            if (len < 60)  return '1.05rem';
+            if (len < 80)  return '0.92rem';
+            return '0.82rem';
+        }
+
         function updatePhrase() {
-            const randomPhrase = phrases[Math.floor(Math.random() * phrases.length)];
-            eye.textContent = randomPhrase;
-            
-            // Visual feedback
-            ball.classList.remove('shake-animation');
-            void ball.offsetWidth; // Trigger reflow
-            ball.classList.add('shake-animation');
+            const phrase = phrases[Math.floor(Math.random() * phrases.length)];
+
+            // Hide text
+            eyeText.classList.remove('show-text', 'initial');
+            eyeText.style.opacity = '0';
+            eyeText.style.transition = 'none';
+
+            // Trigger bounce
+            ball.classList.remove('bouncing');
+            void ball.offsetWidth;
+            ball.classList.add('bouncing');
+
+            // After ball settles, set new text and fade it in
+            setTimeout(() => {
+                eyeText.textContent = phrase;
+                eyeText.style.fontSize = getFontSize(phrase);
+                eyeText.style.transition = 'opacity 0.7s ease';
+                eyeText.style.opacity = '1';
+            }, 650);
 
             setTimeout(() => {
-                ball.classList.remove('shake-animation');
-            }, 500);
+                ball.classList.remove('bouncing');
+            }, 950);
         }
 
         function handleMotion(event) {
@@ -208,16 +226,15 @@
             const accY = event.accelerationIncludingGravity.y;
             const accZ = event.accelerationIncludingGravity.z;
 
-            // Detect significant movement (shake)
             const magnitude = Math.sqrt(accX**2 + accY**2 + accZ**2);
 
-            if (magnitude > 25) { // Threshold for shaking
+            if (magnitude > 25) {
                 const currentTime = Date.now();
-                if (currentTime - lastShakeTime > 1000) { // Cooldown 1 second
+                if (currentTime - lastShakeTime > 1000) {
                     isShaking = true;
                     updatePhrase();
                     lastShakeTime = currentTime;
-                    
+
                     setTimeout(() => {
                         isShaking = false;
                     }, 1000);
@@ -227,7 +244,6 @@
 
         async function requestPermissions() {
             if (typeof DeviceMotionEvent !== 'undefined' && typeof DeviceMotionEvent.requestPermission === 'function') {
-                // iOS 13+ requires permission
                 try {
                     const permission = await DeviceMotionEvent.requestPermission();
                     if (permission === 'granted') {
@@ -240,7 +256,6 @@
                     alert("Permission denied or error occurred.");
                 }
             } else {
-                // Non-iOS or older iOS
                 window.addEventListener('devicemotion', handleMotion);
                 startBtn.classList.add('hidden');
                 instruction.textContent = "Shake your phone now";
