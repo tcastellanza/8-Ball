@@ -184,6 +184,7 @@
 
         let isShaking = false;
         let lastShakeTime = 0;
+        let idleTimer = null;
 
         function getFontSize(text) {
             const len = text.length;
@@ -233,6 +234,7 @@
                 if (currentTime - lastShakeTime > 1000) {
                     isShaking = true;
                     updatePhrase();
+                    restartIdleTimer(); 
                     lastShakeTime = currentTime;
 
                     setTimeout(() => {
@@ -240,6 +242,23 @@
                     }, 1000);
                 }
             }
+        }
+        //fades out, swaps text back, fades in
+        function resetToInitial() {
+            eyeText.style.transition = 'opacity 0.7s ease';
+            eyeText.style.opacity = '0';
+
+            setTimeout(() => {
+            eyeText.textContent = 'SHAKE ME';
+            eyeText.style.fontSize = '1.2rem';
+            eyeText.style.opacity = '1';
+            }, 700);
+        }
+
+        //clears and restarts the 20s countdown
+        function restartIdleTimer() {
+            clearTimeout(idleTimer);
+            idleTimer = setTimeout(resetToInitial, 20000);
         }
 
         async function requestPermissions() {
