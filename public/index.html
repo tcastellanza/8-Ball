@@ -249,9 +249,11 @@
             eyeText.style.opacity = '0';
 
             setTimeout(() => {
-            eyeText.textContent = 'SHAKE ME';
-            eyeText.style.fontSize = '1.2rem';
-            eyeText.style.opacity = '1';
+                eyeText.classList.remove('show-text');
+                eyeText.classList.add('initial');
+                eyeText.textContent = 'SHAKE ME';
+                eyeText.style.fontSize = '1.2rem';
+                eyeText.style.opacity = '1';
             }, 700);
         }
 
